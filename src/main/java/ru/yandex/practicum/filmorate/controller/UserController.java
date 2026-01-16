@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -9,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -22,25 +25,31 @@ public class UserController {
     @PostMapping
     public User create(@RequestBody User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
+            log.error("Email validation error");
             throw new ValidationException("Электронная почта не может быть пустой");
         }
         if (!user.getEmail().contains(Character.toString('@'))) {
+            log.error("Email validation error");
             throw new ValidationException("Электронная почта должна содержать символ @");
         }
         if (user.getLogin() == null || user.getLogin().isBlank()) {
+            log.error("Login validation error");
             throw new ValidationException("Логин не может быть пустым");
         }
         if (user.getLogin().contains(" ")) {
+            log.error("Login validation error");
             throw new ValidationException("Логин не может содержать пробелы");
         }
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {
+            log.error("Birthday date validation error");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
         user.setId(getNextId());
         users.put(user.getId(), user);
+        log.trace("New user with id " + user.getId() + " created");
 
         return user;
     }
@@ -48,31 +57,48 @@ public class UserController {
     @PutMapping
     public User update(@RequestBody User newUser) {
         if (newUser.getId() == null) {
+            log.error("Id validation error");
             throw new ValidationException("Id должен быть указан");
         }
-        User oldUser = users.get(newUser.getId());
-        if (oldUser == null) {
-            throw new ValidationException("Пользователь с id = " + newUser.getId() + " не найден");
+        if (users.containsKey(newUser.getId())) {
+            User oldUser = users.get(newUser.getId());
+            if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
+                log.error("Email validation error");
+                throw new ValidationException("Электронная почта не может быть пустой");
+            }
+            if (!newUser.getEmail().contains(Character.toString('@'))) {
+                log.error("Email validation error");
+                throw new ValidationException("Электронная почта должна содержать символ @");
+            }
+            oldUser.setEmail(newUser.getEmail());
+            if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
+                log.error("Login validation error");
+                throw new ValidationException("Логин не может быть пустым");
+            }
+            if (newUser.getLogin().contains(" ")) {
+                log.error("Login validation error");
+                throw new ValidationException("Логин не может содержать пробелы");
+            }
+            oldUser.setLogin(newUser.getLogin());
+            if (newUser.getName() == null || newUser.getName().isBlank()) {
+                oldUser.setName(newUser.getLogin());
+            }
+            oldUser.setName(newUser.getName());
+            if (newUser.getBirthday() != null) {
+                if (newUser.getBirthday().isAfter(LocalDate.now())) {
+                    log.error("Birthday date validation error");
+                    throw new ValidationException("Дата рождения не может быть в будущем");
+                }
+                oldUser.setBirthday(newUser.getBirthday());
+            }
+            log.trace("User with id " + oldUser.getId() + " updated");
+
+            return oldUser;
         }
-//        if (!newUser.getEmail().equals(oldUser.getEmail()) && doesEmailExist(newUser.getEmail())) {
-//            throw new DuplicatedDataException("Этот имейл уже используется");
-//        }
-//        if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
-//            oldUser.setEmail(newUser.getEmail());
-//        }
-//        if (newUser.getUsername() != null && !newUser.getUsername().isBlank()) {
-//            oldUser.setUsername(newUser.getUsername());
-//        }
-//        if (newUser.getPassword() != null && !newUser.getPassword().isBlank()) {
-//            oldUser.setPassword(newUser.getPassword());
-//        }
 
-        return oldUser;
+        log.error("Id not found error");
+        throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
-
-//    boolean doesEmailExist(String email) {
-//        return users.values().stream().anyMatch(t -> t.getEmail().equalsIgnoreCase(email));
-//    }
 
     private long getNextId() {
         long currentMaxId = users.keySet()
