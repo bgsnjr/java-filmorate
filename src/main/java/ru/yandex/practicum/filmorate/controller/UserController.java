@@ -43,18 +43,17 @@ public class UserController {
             throw new NotFoundException("User with id = " + newUser.getId() + " not found");
         }
         oldUser.setEmail(newUser.getEmail());
-        log.trace("Set new email: {}", newUser.getName());
         oldUser.setLogin(newUser.getLogin());
-        log.trace("Set new login: {}", newUser.getLogin());
         if (newUser.getName() == null || newUser.getName().isBlank()) {
             oldUser.setName(newUser.getLogin());
         } else {
             oldUser.setName(newUser.getName());
         }
-        log.trace("Set new name: {}", newUser.getName());
         oldUser.setBirthday(newUser.getBirthday());
-        log.trace("Set new birthday date: {}", newUser.getBirthday());
-        log.trace("User with id " + oldUser.getId() + " updated");
+        log.trace(
+                "User with id {} updated. New email: {}, new login: {}, new name: {}, new birthday date: {}",
+                oldUser.getId(), oldUser.getEmail(), oldUser.getLogin(), oldUser.getName(), oldUser.getBirthday()
+        );
 
         return oldUser;
     }

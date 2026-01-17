@@ -40,14 +40,13 @@ public class FilmController {
             throw new NotFoundException("Film with id = " + newFilm.getId() + " not found");
         }
         oldFilm.setName(newFilm.getName());
-        log.trace("Set new name: {}", newFilm.getName());
         oldFilm.setDescription(newFilm.getDescription());
-        log.trace("Set new description: {}", newFilm.getDescription());
         oldFilm.setReleaseDate(newFilm.getReleaseDate());
-        log.trace("Set new release date: {}", newFilm.getReleaseDate());
         oldFilm.setDuration(newFilm.getDuration());
-        log.trace("Set new duration: {}", newFilm.getDuration());
-        log.trace("Film with id " + oldFilm.getId() + " updated");
+        log.trace(
+                "Film with id {} updated. New name: {}, new description: {}, new release date: {}, new duration: {}",
+                oldFilm.getId(), oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration()
+        );
 
         return oldFilm;
     }
