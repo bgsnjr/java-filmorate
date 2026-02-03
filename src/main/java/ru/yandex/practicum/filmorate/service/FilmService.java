@@ -29,11 +29,11 @@ public class FilmService {
                 .remove(userId);
     }
 
-    public Collection<Film> getTop10Films() {
+    public Collection<Film> getTop10Films(Integer count) {
         return filmStorage.findAll()
                 .stream()
                 .sorted(Comparator.comparing(Film::getLikes).reversed())
-                .limit(10)
+                .limit(count)
                 .toList();
     }
 }

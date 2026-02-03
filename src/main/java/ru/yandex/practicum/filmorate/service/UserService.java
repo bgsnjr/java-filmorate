@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -14,7 +14,7 @@ import java.util.Set;
 public class UserService {
     private final UserStorage userStorage;
 
-    public List<User> getFriends(Long userId) {
+    public Collection<User> getFriends(Long userId) {
         User user = userStorage.findUserById(userId);
         Set<Long> friendsIds = user.getFriends();
 
@@ -24,9 +24,9 @@ public class UserService {
                 .toList();
     }
 
-    public List<User> getMutualFriends(Long userId1, Long userId2) {
-        User user1 = userStorage.findUserById(userId1);
-        User user2 = userStorage.findUserById(userId2);
+    public Collection<User> getMutualFriends(Long userId, Long otherUserId) {
+        User user1 = userStorage.findUserById(userId);
+        User user2 = userStorage.findUserById(otherUserId);
 
         Set<Long> intersection = new HashSet<>(user1.getFriends());
         intersection.retainAll(user2.getFriends());
