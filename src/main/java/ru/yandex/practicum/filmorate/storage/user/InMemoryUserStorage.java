@@ -35,7 +35,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User newUser) {
-        User oldUser = users.get(newUser.getId());
+        User oldUser = findUserById(newUser.getId());
         if (oldUser == null) {
             log.error("Id not found error");
             throw new NotFoundException("User with id = " + newUser.getId() + " not found");
@@ -60,4 +60,11 @@ public class InMemoryUserStorage implements UserStorage {
     public User findUserById(Long id) {
         return users.get(id);
     }
+
+    @Override
+    public Collection<Long> findUserIds() {
+        return users.keySet();
+    }
+
+
 }

@@ -32,7 +32,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film update(Film newFilm) {
-        Film oldFilm = films.get(newFilm.getId());
+        Film oldFilm = findFilmById(newFilm.getId());
         if (oldFilm == null) {
             log.error("Id not found error");
             throw new NotFoundException("Film with id = " + newFilm.getId() + " not found");
@@ -41,6 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         oldFilm.setDescription(newFilm.getDescription());
         oldFilm.setReleaseDate(newFilm.getReleaseDate());
         oldFilm.setDuration(newFilm.getDuration());
+
         log.trace(
                 "Film with id {} updated. New name: {}, new description: {}, new release date: {}, new duration: {}",
                 oldFilm.getId(), oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration()

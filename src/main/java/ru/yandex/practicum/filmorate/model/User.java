@@ -24,5 +24,13 @@ public class User {
     String name;
     @PastOrPresent(message = "Дата рождения не может быть позже сегодняшнего дня")
     LocalDate birthday;
-    Set<Long> friends = new HashSet<>();
+    Set<Long> friends;
+
+    public Set<Long> getFriends() {
+        if (friends == null) {
+            friends = new HashSet<>();
+        }
+        return friends;
+    }
+
 }

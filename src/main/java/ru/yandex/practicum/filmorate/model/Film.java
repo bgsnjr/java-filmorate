@@ -23,9 +23,16 @@ public class Film {
     LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     Integer duration;
-    Set<Long> userLikes = new HashSet<>();
+    Set<Long> userLikes;
 
-    public int getLikes() {
+    public Set<Long> getUserLikes() {
+        if (userLikes == null) {
+            userLikes = new HashSet<>();
+        }
+        return userLikes;
+    }
+
+    public int getLikesNumber() {
         return userLikes.size();
     }
 }
