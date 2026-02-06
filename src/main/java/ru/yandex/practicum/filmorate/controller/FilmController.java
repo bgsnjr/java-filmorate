@@ -1,7 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -44,22 +45,22 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film findFilmById(@PathVariable @NotNull Long id) {
+    public Film findFilmById(@PathVariable @Positive Long id) {
         return filmService.findFilmById(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable(name = "id") @NotNull Long filmId, @PathVariable @NotNull Long userId) {
+    public void addLike(@PathVariable(name = "id") @Positive Long filmId, @PathVariable @Positive Long userId) {
         filmService.addLike(filmId, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void deleteLike(@PathVariable(name = "id") @NotNull Long filmId, @PathVariable @NotNull Long userId) {
+    public void deleteLike(@PathVariable(name = "id") @Positive Long filmId, @PathVariable @Positive Long userId) {
         filmService.deleteLike(filmId, userId);
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getTop10Films(@RequestParam(defaultValue = "10") Integer count) {
+    public Collection<Film> getTop10Films(@RequestParam(defaultValue = "10") @PositiveOrZero Integer count) {
         return filmService.getTop10Films(count);
     }
 

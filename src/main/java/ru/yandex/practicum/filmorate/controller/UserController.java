@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -43,35 +43,35 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User findUserById(@PathVariable @NotNull Long id) {
+    public User findUserById(@PathVariable @Positive Long id) {
         return userService.findUserById(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(
-            @PathVariable(name = "id") @NotNull Long userId,
-            @PathVariable(name = "friendId") @NotNull Long addedFriendId
+            @PathVariable(name = "id") @Positive Long userId,
+            @PathVariable(name = "friendId") @Positive Long addedFriendId
     ) {
         userService.addFriend(userId, addedFriendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void deleteFriend(
-            @PathVariable(name = "id") @NotNull Long userId,
-            @PathVariable(name = "friendId") @NotNull Long deletedFriendId
+            @PathVariable(name = "id") @Positive Long userId,
+            @PathVariable(name = "friendId") @Positive Long deletedFriendId
     ) {
         userService.deleteFriend(userId, deletedFriendId);
     }
 
     @GetMapping("/{id}/friends")
-    public Collection<User> getFriends(@PathVariable @NotNull Long id) {
+    public Collection<User> getFriends(@PathVariable @Positive Long id) {
         return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Collection<User> getMutualFriends(
-            @PathVariable(name = "id") @NotNull Long userId,
-            @PathVariable(name = "otherId") @NotNull Long otherUserId
+            @PathVariable(name = "id") @Positive Long userId,
+            @PathVariable(name = "otherId") @Positive Long otherUserId
     ) {
         return userService.getMutualFriends(userId, otherUserId);
     }

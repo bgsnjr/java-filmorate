@@ -63,17 +63,8 @@ public class UserService {
         Objects.requireNonNull(userId, "userId must not be null");
         Objects.requireNonNull(otherUserId, "otherUserId must not be null");
 
-        User user1 = userStorage.findUserById(userId);
-        if (user1 == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-
-        User user2 = userStorage.findUserById(otherUserId);
-        if (user2 == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + otherUserId + " not found");
-        }
+        User user1 = getUserById(userId);
+        User user2 = getUserById(otherUserId);
 
         Set<Long> friendsList1 = Optional.ofNullable(user1.getFriends()).orElse(Set.of());
         Set<Long> friendsList2 = Optional.ofNullable(user2.getFriends()).orElse(Set.of());
@@ -96,17 +87,8 @@ public class UserService {
             throw new ValidationException("User cannot add themselves as a friend");
         }
 
-        User user = userStorage.findUserById(userId);
-        if (user == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-
-        User addedFriend = userStorage.findUserById(addedFriendId);
-        if (addedFriend == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + addedFriendId + " not found");
-        }
+        User user = getUserById(userId);
+        User addedFriend = getUserById(addedFriendId);
 
         user.getFriends().add(addedFriendId);
         addedFriend.getFriends().add(userId);
@@ -118,17 +100,8 @@ public class UserService {
         Objects.requireNonNull(userId, "userId must not be null");
         Objects.requireNonNull(deletedFriendId, "deletedFriendId must not be null");
 
-        User user = userStorage.findUserById(userId);
-        if (user == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-
-        User deletedFriend = userStorage.findUserById(deletedFriendId);
-        if (deletedFriend == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + deletedFriendId + " not found");
-        }
+        User user = getUserById(userId);
+        User deletedFriend = getUserById(deletedFriendId);
 
         boolean removedFromUser = user.getFriends().remove(deletedFriendId);
         boolean removedFromDeletedFriend = deletedFriend.getFriends().remove(userId);
@@ -138,5 +111,14 @@ public class UserService {
         } else {
             log.trace("User with id " + userId + " removed user with id " + deletedFriendId + " from friends");
         }
+    }
+
+    private User getUserById(Long userId) {
+        User user = userStorage.findUserById(userId);
+        if (user == null) {
+            log.error("Id not found error");
+            throw new NotFoundException("User with id " + userId + " not found");
+        }
+        return user;
     }
 }

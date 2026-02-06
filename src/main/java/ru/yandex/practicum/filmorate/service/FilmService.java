@@ -42,17 +42,8 @@ public class FilmService {
         Objects.requireNonNull(filmId, "filmId must not be null");
         Objects.requireNonNull(userId, "userId must not be null");
 
-        Film film = filmStorage.findFilmById(filmId);
-        if (film == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("Film with id " + filmId + " not found");
-        }
-
-        User user = userStorage.findUserById(userId);
-        if (user == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
+        Film film = getFilmById(filmId);
+        getUserById(userId);
 
         film.getUserLikes().add(userId);
         log.trace("Film with id " + filmId + " got like from user with id " + userId);
@@ -62,17 +53,8 @@ public class FilmService {
         Objects.requireNonNull(filmId, "filmId must not be null");
         Objects.requireNonNull(userId, "userId must not be null");
 
-        Film film = filmStorage.findFilmById(filmId);
-        if (film == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("Film with id " + filmId + " not found");
-        }
-
-        User user = userStorage.findUserById(userId);
-        if (user == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
+        Film film = getFilmById(filmId);
+        getUserById(userId);
 
         boolean removed = film.getUserLikes().remove(userId);
         if (!removed) {
@@ -99,6 +81,24 @@ public class FilmService {
                 .sorted(Comparator.comparing(Film::getLikesNumber).reversed())
                 .limit(count)
                 .toList();
+    }
+
+    private Film getFilmById(Long filmId) {
+        Film film = filmStorage.findFilmById(filmId);
+        if (film == null) {
+            log.error("Id not found error");
+            throw new NotFoundException("Film with id " + filmId + " not found");
+        }
+        return film;
+    }
+
+    private User getUserById(Long userId) {
+        User user = userStorage.findUserById(userId);
+        if (user == null) {
+            log.error("Id not found error");
+            throw new NotFoundException("User with id " + userId + " not found");
+        }
+        return user;
     }
 
 }
