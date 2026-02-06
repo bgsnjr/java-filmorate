@@ -1,61 +1,79 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-import static ru.yandex.practicum.filmorate.util.IdGenerator.getNextId;
-
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
+@Validated
 public class UserController {
-    private final Map<Long, User> users = new HashMap<>();
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
-        return users.values();
+        return userService.findAll();
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        user.setId(getNextId(users));
-        users.put(user.getId(), user);
-        log.trace("New user with id " + user.getId() + " created");
-
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User newUser) {
-        User oldUser = users.get(newUser.getId());
-        if (oldUser == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id = " + newUser.getId() + " not found");
-        }
-        oldUser.setEmail(newUser.getEmail());
-        oldUser.setLogin(newUser.getLogin());
-        if (newUser.getName() == null || newUser.getName().isBlank()) {
-            oldUser.setName(newUser.getLogin());
-        } else {
-            oldUser.setName(newUser.getName());
-        }
-        oldUser.setBirthday(newUser.getBirthday());
-        log.trace(
-                "User with id {} updated. New email: {}, new login: {}, new name: {}, new birthday date: {}",
-                oldUser.getId(), oldUser.getEmail(), oldUser.getLogin(), oldUser.getName(), oldUser.getBirthday()
-        );
+        return userService.update(newUser);
+    }
 
-        return oldUser;
+    @GetMapping("/{id}")
+    public User findUserById(@PathVariable @Positive Long id) {
+        return userService.findUserById(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(
+            @PathVariable(name = "id") @Positive Long userId,
+            @PathVariable(name = "friendId") @Positive Long addedFriendId
+    ) {
+        userService.addFriend(userId, addedFriendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void deleteFriend(
+            @PathVariable(name = "id") @Positive Long userId,
+            @PathVariable(name = "friendId") @Positive Long deletedFriendId
+    ) {
+        userService.deleteFriend(userId, deletedFriendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriends(@PathVariable @Positive Long id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getMutualFriends(
+            @PathVariable(name = "id") @Positive Long userId,
+            @PathVariable(name = "otherId") @Positive Long otherUserId
+    ) {
+        return userService.getMutualFriends(userId, otherUserId);
     }
 
 }
