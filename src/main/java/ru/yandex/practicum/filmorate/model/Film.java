@@ -24,6 +24,8 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     Integer duration;
     Set<Long> userLikes;
+    Set<Genre> genre;
+    Rating rating;
 
     public Set<Long> getUserLikes() {
         if (userLikes == null) {
