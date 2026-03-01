@@ -3,122 +3,104 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.user.UserCreateDto;
+import ru.yandex.practicum.filmorate.dto.user.UserResponseDto;
+import ru.yandex.practicum.filmorate.dto.user.UserUpdateDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+
+import static ru.yandex.practicum.filmorate.model.FriendshipStatus.PENDING;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-    private final UserStorage userStorage;
 
-    public Collection<User> findAll() {
-        return userStorage.findAll();
+    private final UserRepository userRepository;
+
+    public UserResponseDto createUser(UserCreateDto dto) {
+        User user = UserMapper.toModel(dto);
+        User saved = userRepository.create(user);
+
+        log.debug("Created user with id {}", saved.getId());
+
+        return UserMapper.toDto(saved);
     }
 
-    public User create(User user) {
-        return userStorage.create(user);
+    public UserResponseDto updateUser(UserUpdateDto dto) {
+        User existing = getUserOrThrow(dto.getId());
+
+        UserMapper.updateModel(existing, dto);
+
+        User updated = userRepository.update(existing);
+
+        log.debug("Updated user with id {}", updated.getId());
+
+        return UserMapper.toDto(updated);
     }
 
-    public User update(User newUser) {
-        return userStorage.update(newUser);
+    public UserResponseDto findUserById(Long id) {
+        return UserMapper.toDto(getUserOrThrow(id));
     }
 
-    public User findUserById(Long id) {
-        return userStorage.findUserById(id);
-    }
-
-    public Collection<User> getFriends(Long userId) {
-        Objects.requireNonNull(userId, "userId must not be null");
-
-        User user = userStorage.findUserById(userId);
-        if (user == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-
-        Set<Long> friendsIds = user.getFriends();
-        if (friendsIds.isEmpty()) {
-            return List.of();
-        }
-
-        return userStorage.findUserIds()
+    public List<UserResponseDto> findAllUsers() {
+        return userRepository.findAll()
                 .stream()
-                .filter(friendsIds::contains)
-                .map(userStorage::findUserById)
-                .filter(Objects::nonNull)
+                .map(UserMapper::toDto)
                 .toList();
     }
 
-    public Collection<User> getMutualFriends(Long userId, Long otherUserId) {
-        Objects.requireNonNull(userId, "userId must not be null");
-        Objects.requireNonNull(otherUserId, "otherUserId must not be null");
+    public void addFriend(Long userId, Long friendId) {
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
 
-        User user1 = getUserById(userId);
-        User user2 = getUserById(otherUserId);
+        if (userId.equals(friendId)) {
+            throw new ValidationException("Cannot add yourself as a friend");
+        }
 
-        Set<Long> friendsList1 = Optional.ofNullable(user1.getFriends()).orElse(Set.of());
-        Set<Long> friendsList2 = Optional.ofNullable(user2.getFriends()).orElse(Set.of());
-        Set<Long> intersection = new HashSet<>(friendsList1);
-        intersection.retainAll(friendsList2);
+        if (!userRepository.existsFriendship(userId, friendId)) {
+            userRepository.addFriend(userId, friendId, PENDING);
+            log.debug("User {} added friend {}", userId, friendId);
+        }
+    }
 
-        return userStorage.findUserIds()
+    public void removeFriend(Long userId, Long friendId) {
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
+
+        userRepository.removeFriend(userId, friendId);
+
+        log.debug("User {} removed friend {}", userId, friendId);
+    }
+
+    public List<UserResponseDto> findFriends(Long userId) {
+        getUserOrThrow(userId);
+
+        return userRepository.findFriends(userId)
                 .stream()
-                .filter(intersection::contains)
-                .map(userStorage::findUserById)
-                .filter(Objects::nonNull)
+                .map(UserMapper::toDto)
                 .toList();
     }
 
-    public void addFriend(Long userId, Long addedFriendId) {
-        Objects.requireNonNull(userId, "userId must not be null");
-        Objects.requireNonNull(addedFriendId, "addedFriendId must not be null");
+    public List<UserResponseDto> findMutualFriends(Long userId, Long otherUserId) {
+        getUserOrThrow(userId);
+        getUserOrThrow(otherUserId);
 
-        if (userId.equals(addedFriendId)) {
-            throw new ValidationException("User cannot add themselves as a friend");
-        }
-
-        User user = getUserById(userId);
-        User addedFriend = getUserById(addedFriendId);
-
-        user.getFriends().add(addedFriendId);
-        addedFriend.getFriends().add(userId);
-        log.trace("User with id " + userId + " and user with id " + addedFriendId + " became friends");
-
+        return userRepository.findMutualFriends(userId, otherUserId)
+                .stream()
+                .map(UserMapper::toDto)
+                .toList();
     }
 
-    public void deleteFriend(Long userId, Long deletedFriendId) {
-        Objects.requireNonNull(userId, "userId must not be null");
-        Objects.requireNonNull(deletedFriendId, "deletedFriendId must not be null");
-
-        User user = getUserById(userId);
-        User deletedFriend = getUserById(deletedFriendId);
-
-        boolean removedFromUser = user.getFriends().remove(deletedFriendId);
-        boolean removedFromDeletedFriend = deletedFriend.getFriends().remove(userId);
-
-        if (!removedFromUser || !removedFromDeletedFriend) {
-            log.warn("Id not in friends list");
-        } else {
-            log.trace("User with id " + userId + " removed user with id " + deletedFriendId + " from friends");
-        }
+    private User getUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("User with id " + id + " not found"));
     }
 
-    private User getUserById(Long userId) {
-        User user = userStorage.findUserById(userId);
-        if (user == null) {
-            log.error("Id not found error");
-            throw new NotFoundException("User with id " + userId + " not found");
-        }
-        return user;
-    }
 }

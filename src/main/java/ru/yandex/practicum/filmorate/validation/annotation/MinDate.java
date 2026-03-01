@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MinDate {
-    String message() default "Дата должна быть не раньше {value}";
+    String message() default "Min date cannot be before {value}";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
     String value();
