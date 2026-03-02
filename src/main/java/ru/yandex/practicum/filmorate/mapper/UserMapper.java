@@ -21,6 +21,22 @@ public final class UserMapper {
                 .build();
     }
 
+    public static User toModel(UserUpdateDto dto) {
+        String name = dto.getName();
+
+        if (name == null || name.isBlank()) {
+            name = dto.getLogin();
+        }
+
+        return User.builder()
+                .id(dto.getId())
+                .email(dto.getEmail())
+                .login(dto.getLogin())
+                .name(name)
+                .birthday(dto.getBirthday())
+                .build();
+    }
+
     public static UserResponseDto toDto(User user) {
         return new UserResponseDto(
                 user.getId(),
@@ -31,16 +47,4 @@ public final class UserMapper {
         );
     }
 
-    public static void updateModel(User user, UserUpdateDto dto) {
-        String name = dto.getName();
-
-        if (name == null || name.isBlank()) {
-            name = dto.getLogin();
-        }
-
-        user.setEmail(dto.getEmail());
-        user.setLogin(dto.getLogin());
-        user.setName(name);
-        user.setBirthday(dto.getBirthday());
-    }
 }

@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.repository.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -21,22 +19,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JdbcUserRepository implements UserRepository {
     private final JdbcTemplate jdbc;
-
-    private final RowMapper<User> userRowMapper = (rs, rowNum) -> {
-        Date date = rs.getDate("birthday");
-
-        return User.builder()
-                .id(rs.getLong("id"))
-                .email(rs.getString("email"))
-                .login(rs.getString("login"))
-                .name(rs.getString("name"))
-                .birthday(date != null ? date.toLocalDate() : null)
-                .build();
-    };
+    private final UserRowMapper userRowMapper;
 
     @Override
-    public User create(User user) {
-        String sql = """
+    public User createUser(User user) {
+        String query = """
                 INSERT INTO users (email, login, name, birthday)
                 VALUES (?, ?, ?, ?)
                 """;
@@ -45,7 +32,7 @@ public class JdbcUserRepository implements UserRepository {
 
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                    sql,
+                    query,
                     Statement.RETURN_GENERATED_KEYS
             );
             ps.setString(1, user.getEmail());
@@ -57,25 +44,20 @@ public class JdbcUserRepository implements UserRepository {
             return ps;
         }, keyHolder);
 
-        Number key = keyHolder.getKey();
-        if (key == null) {
-            throw new IllegalStateException("Failed to retrieve generated user id");
-        }
-
-        user.setId(key.longValue());
+        user.setId(keyHolder.getKey().longValue());
         return user;
     }
 
     @Override
-    public User update(User user) {
-        String sql = """
+    public User updateUser(User user) {
+        String query = """
                 UPDATE users
                 SET email = ?, login = ?, name = ?, birthday = ?
                 WHERE id = ?
                 """;
 
         int updated = jdbc.update(
-                sql,
+                query,
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
@@ -93,7 +75,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public Optional<User> findUserById(Long id) {
         String query = """
                 SELECT *
                 FROM users
@@ -106,7 +88,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public List<User> findAll() {
+    public List<User> findAllUsers() {
         String query = """
                 SELECT *
                 FROM users
@@ -117,48 +99,36 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public void addFriend(Long userId, Long friendId, FriendshipStatus status) {
-        String sql = """
+        String query = """
                 INSERT INTO friendships (user_id, friend_id, status_id)
                 VALUES (?, ?, ?)
                 """;
 
-        try {
-            jdbc.update(sql, userId, friendId, status.getId());
-        } catch (DuplicateKeyException e) {
-        }
+        jdbc.update(query, userId, friendId, status.getId());
     }
 
     @Override
-    public void updateFriendshipStatus(Long userId,
-                                       Long friendId,
-                                       FriendshipStatus status) {
-        String sql = """
+    public void updateFriendshipStatus(Long userId, Long friendId, FriendshipStatus status) {
+        String query = """
                 UPDATE friendships
                 SET status_id = ?
-                WHERE user_id = ?
-                AND friend_id = ?
+                WHERE user_id = ? AND friend_id = ?
                 """;
 
-        int updated = jdbc.update(sql, status.getId(), userId, friendId);
-
-        if (updated == 0) {
-            throw new NotFoundException("Friendship not found");
-        }
+        jdbc.update(query, status.getId(), userId, friendId);
     }
 
     @Override
-    public boolean existsFriendship(Long userId, Long friendId) {
-        String sql = """
-                SELECT 1
+    public Optional<Integer> getFriendshipStatus(Long userId, Long friendId) {
+        String query = """
+                SELECT status_id
                 FROM friendships
-                WHERE user_id = ?
-                AND friend_id = ?
-                LIMIT 1
+                WHERE user_id = ? AND friend_id = ?
                 """;
 
-        List<Integer> result = jdbc.query(sql, (rs, rowNum) -> rs.getInt(1), userId, friendId);
+        List<Integer> result = jdbc.query(query, (rs, rowNum) -> rs.getInt("status_id"), userId, friendId);
 
-        return !result.isEmpty();
+        return result.stream().findFirst();
     }
 
     @Override
@@ -190,10 +160,10 @@ public class JdbcUserRepository implements UserRepository {
                 FROM friendships f1
                 JOIN friendships f2 ON f1.friend_id = f2.friend_id
                 JOIN users u ON u.id = f1.friend_id
-                WHERE f1.user_id = ?
-                AND f2.user_id = ?
+                WHERE f1.user_id = ? AND f2.user_id = ?
                 """;
 
         return jdbc.query(query, userRowMapper, userId, otherUserId);
     }
+
 }
