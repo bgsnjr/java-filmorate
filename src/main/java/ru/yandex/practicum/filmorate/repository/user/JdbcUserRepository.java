@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -38,13 +37,13 @@ public class JdbcUserRepository implements UserRepository {
             ps.setString(1, user.getEmail());
             ps.setString(2, user.getLogin());
             ps.setString(3, user.getName());
-            ps.setDate(4, user.getBirthday() != null
-                    ? Date.valueOf(user.getBirthday())
-                    : null);
+            ps.setObject(4, user.getBirthday());
+
             return ps;
         }, keyHolder);
 
         user.setId(keyHolder.getKey().longValue());
+
         return user;
     }
 
@@ -56,16 +55,17 @@ public class JdbcUserRepository implements UserRepository {
                 WHERE id = ?
                 """;
 
-        int updated = jdbc.update(
-                query,
-                user.getEmail(),
-                user.getLogin(),
-                user.getName(),
-                user.getBirthday() != null
-                        ? Date.valueOf(user.getBirthday())
-                        : null,
-                user.getId()
-        );
+        int updated = jdbc.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(query);
+
+            ps.setString(1, user.getEmail());
+            ps.setString(2, user.getLogin());
+            ps.setString(3, user.getName());
+            ps.setObject(4, user.getBirthday());
+            ps.setLong(5, user.getId());
+
+            return ps;
+        });
 
         if (updated == 0) {
             throw new NotFoundException("User with id " + user.getId() + " not found");
@@ -92,6 +92,7 @@ public class JdbcUserRepository implements UserRepository {
         String query = """
                 SELECT *
                 FROM users
+                ORDER BY id
                 """;
 
         return jdbc.query(query, userRowMapper);
@@ -165,5 +166,4 @@ public class JdbcUserRepository implements UserRepository {
 
         return jdbc.query(query, userRowMapper, userId, otherUserId);
     }
-
 }

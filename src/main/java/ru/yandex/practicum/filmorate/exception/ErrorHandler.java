@@ -45,5 +45,4 @@ public class ErrorHandler {
         log.error("Internal server error", e);
         return Map.of("error", "Internal server error");
     }
-
 }

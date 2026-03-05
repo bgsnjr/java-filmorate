@@ -13,5 +13,4 @@ public enum FriendshipStatus {
     public Integer getId() {
         return id;
     }
-
 }

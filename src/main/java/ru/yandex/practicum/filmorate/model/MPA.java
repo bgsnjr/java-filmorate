@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Genre {
+public class MPA {
     private Integer id;
     private String name;
 }

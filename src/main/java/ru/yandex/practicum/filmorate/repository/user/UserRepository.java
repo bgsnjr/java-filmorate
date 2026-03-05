@@ -26,5 +26,4 @@ public interface UserRepository {
     List<User> findFriends(Long userId);
 
     List<User> findMutualFriends(Long userId, Long otherUserId);
-
 }

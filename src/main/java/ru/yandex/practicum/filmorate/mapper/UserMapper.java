@@ -46,5 +46,4 @@ public final class UserMapper {
                 user.getBirthday()
         );
     }
-
 }

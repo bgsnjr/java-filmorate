@@ -1,9 +1,11 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto.film;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.dto.genre.GenreResponseDto;
+import ru.yandex.practicum.filmorate.model.MPA;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -13,7 +15,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Film {
+public class FilmResponseDto {
     private Long id;
     private String name;
     private String description;
@@ -22,5 +24,5 @@ public class Film {
     private MPA mpa;
 
     @Builder.Default
-    private Set<Genre> genres = new HashSet<>();
+    private Set<GenreResponseDto> genres = new HashSet<>();
 }

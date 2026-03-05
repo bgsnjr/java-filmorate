@@ -114,5 +114,4 @@ public class UserService {
                 .orElseThrow(() ->
                         new NotFoundException("User with id " + id + " not found"));
     }
-
 }
