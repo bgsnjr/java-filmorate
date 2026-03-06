@@ -17,7 +17,7 @@ public class JdbcMpaRepository implements MpaRepository {
     @Override
     public Optional<MPA> findRatingById(Integer id) {
         String query = """
-                SELECT *
+                SELECT id, name
                 FROM ratings
                 WHERE id = ?
                 """;
@@ -29,7 +29,7 @@ public class JdbcMpaRepository implements MpaRepository {
     @Override
     public List<MPA> findAllRatings() {
         String query = """
-                SELECT *
+                SELECT id, name
                 FROM ratings
                 ORDER BY id
                 """;

@@ -14,7 +14,7 @@ public interface FilmRepository {
 
     List<Film> findAllFilms();
 
-    List<Film> findTop10Films();
+    List<Film> findMostPopularFilms(Integer count);
 
     void addLike(Long filmId, Long userId);
 

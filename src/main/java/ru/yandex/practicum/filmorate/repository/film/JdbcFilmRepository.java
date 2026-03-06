@@ -51,10 +51,11 @@ public class JdbcFilmRepository implements FilmRepository {
         film.setId(generatedId);
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            jdbcGenreRepository.addGenresToFilm(generatedId, film.getGenres());
-            setGenresForFilm(film);
-            setMpaForFilm(film);
+            jdbcGenreRepository.insertGenresForFilm(generatedId, film.getGenres());
         }
+
+        setGenresForFilm(film);
+        setMpaForFilm(film);
 
         return film;
     }
@@ -88,11 +89,11 @@ public class JdbcFilmRepository implements FilmRepository {
             jdbc.update("DELETE FROM films_genres WHERE film_id = ?", film.getId());
 
             if (!film.getGenres().isEmpty()) {
-                jdbcGenreRepository.addGenresToFilm(film.getId(), film.getGenres());
-                setGenresForFilm(film);
+                jdbcGenreRepository.insertGenresForFilm(film.getId(), film.getGenres());
             }
         }
 
+        setGenresForFilm(film);
         setMpaForFilm(film);
 
         return film;
@@ -102,12 +103,12 @@ public class JdbcFilmRepository implements FilmRepository {
     public Optional<Film> findFilmById(Long id) {
         String query = """
                 SELECT f.id,
-                       f.name,
-                       f.description,
-                       f.release_date,
-                       f.duration,
-                       f.rating_id,
-                       r.name AS rating
+                    f.name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.rating_id,
+                    r.name rating_name
                 FROM films f
                 JOIN ratings r ON r.id = f.rating_id
                 WHERE f.id = ?
@@ -125,19 +126,15 @@ public class JdbcFilmRepository implements FilmRepository {
     @Override
     public List<Film> findAllFilms() {
         String query = """
-                SELECT f.id AS id,
-                       f.name AS name,
-                       f.description AS description,
-                       f.release_date AS release_date,
-                       f.duration AS duration,
-                       f.rating_id AS rating_id,
-                       r.name AS rating,
-                       g.name AS genre
+                SELECT f.id,
+                    f.name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.rating_id,
+                    r.name rating_name
                 FROM films f
                 JOIN ratings r ON r.id = f.rating_id
-                LEFT JOIN films_genres fg ON fg.film_id = f.id
-                LEFT JOIN genres g ON g.id = fg.genre_id
-                ORDER BY id
                 """;
 
         List<Film> films = jdbc.query(query, filmRowMapper);
@@ -148,18 +145,49 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     @Override
-    public List<Film> findTop10Films() {
-        return null;
+    public List<Film> findMostPopularFilms(Integer count) {
+        String query = """
+                SELECT f.id,
+                    f.name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.rating_id,
+                    r.name rating_name,
+                    COUNT(fl.film_id)
+                FROM films f
+                JOIN ratings r ON r.id = f.rating_id
+                JOIN films_likes fl ON fl.film_id = f.id
+                GROUP BY f.id
+                ORDER BY COUNT(fl.film_id) DESC
+                LIMIT ?
+                """;
+
+        List<Film> films = jdbc.query(query, filmRowMapper, count);
+
+        setGenresForFilms(films);
+
+        return films;
     }
 
     @Override
     public void addLike(Long filmId, Long userId) {
+        String query = """
+                INSERT INTO films_likes (film_id, user_id)
+                VALUES (?, ?)
+                """;
 
+        jdbc.update(query, filmId, userId);
     }
 
     @Override
     public void deleteLike(Long filmId, Long userId) {
+        String query = """
+                DELETE FROM films_likes
+                WHERE film_id = ? AND user_id = ?
+                """;
 
+        jdbc.update(query, filmId, userId);
     }
 
     private void setGenresForFilm(Film film) {

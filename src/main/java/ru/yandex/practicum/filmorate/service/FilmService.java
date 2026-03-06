@@ -10,9 +10,11 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.genre.GenreRepository;
 import ru.yandex.practicum.filmorate.repository.mpa.MpaRepository;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 
 import java.util.List;
 import java.util.Set;
@@ -22,6 +24,7 @@ import java.util.Set;
 @Slf4j
 public class FilmService {
     private final FilmRepository filmRepository;
+    private final UserRepository userRepository;
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
 
@@ -66,74 +69,41 @@ public class FilmService {
                 .toList();
     }
 
-//
-//    public void addLike(Long filmId, Long userId) {
-//        Objects.requireNonNull(filmId, "filmId must not be null");
-//        Objects.requireNonNull(userId, "userId must not be null");
-//
-//        Film film = getFilmById(filmId);
-//        getUserById(userId);
-//
-//        film.getUserLikes().add(userId);
-//        log.trace("Film with id " + filmId + " got like from user with id " + userId);
-//    }
-//
-//    public void deleteLike(Long filmId, Long userId) {
-//        Objects.requireNonNull(filmId, "filmId must not be null");
-//        Objects.requireNonNull(userId, "userId must not be null");
-//
-//        Film film = getFilmById(filmId);
-//        getUserById(userId);
-//
-//        boolean removed = film.getUserLikes().remove(userId);
-//        if (!removed) {
-//            log.error("Id not found error");
-//            throw new NotFoundException("Like from user with id " + userId + " not found");
-//        }
-//        log.trace("User with id " + userId + " removed like from film with id " + filmId);
-//    }
-//
-//    public Collection<Film> getTop10Films(Integer count) {
-//        if (count == null || count < 1) {
-//            log.error("Path variable validation error");
-//            throw new ValidationException("Count value must be positive");
-//        }
-//
-//        Collection<Film> films = filmStorage.findAll();
-//        if (films == null || films.isEmpty()) {
-//            return List.of();
-//        }
-//
-//        return films
-//                .stream()
-//                .filter(Objects::nonNull)
-//                .sorted(Comparator.comparing(Film::getLikesNumber).reversed())
-//                .limit(count)
-//                .toList();
-//    }
-//
-//    private Film getFilmById(Long filmId) {
-//        Film film = filmStorage.findFilmById(filmId);
-//        if (film == null) {
-//            log.error("Id not found error");
-//            throw new NotFoundException("Film with id " + filmId + " not found");
-//        }
-//        return film;
-//    }
-//
-//    private User getUserById(Long userId) {
-//        User user = userStorage.findUserById(userId);
-//        if (user == null) {
-//            log.error("Id not found error");
-//            throw new NotFoundException("User with id " + userId + " not found");
-//        }
-//        return user;
-//    }
+    public List<FilmResponseDto> findMostPopularFilms(Integer count) {
+        return filmRepository.findMostPopularFilms(count)
+                .stream()
+                .map(FilmMapper::toDto)
+                .toList();
+    }
+
+    public void addLike(Long filmId, Long userId) {
+        getFilmOrThrow(filmId);
+        getUserOrThrow(userId);
+
+        filmRepository.addLike(filmId, userId);
+
+        log.debug("User with id {} added like to film with id {}", userId, filmId);
+    }
+
+    public void deleteLike(Long filmId, Long userId) {
+        getFilmOrThrow(filmId);
+        getUserOrThrow(userId);
+
+        filmRepository.deleteLike(filmId, userId);
+
+        log.debug("User with id {} deleted like from film with id {}", userId, filmId);
+    }
 
     private Film getFilmOrThrow(Long id) {
         return filmRepository.findFilmById(id)
                 .orElseThrow(() ->
                         new NotFoundException("Film with id " + id + " not found"));
+    }
+
+    private User getUserOrThrow(Long id) {
+        return userRepository.findUserById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("User with id " + id + " not found"));
     }
 
     private void validateRating(Integer id) {

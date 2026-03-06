@@ -11,7 +11,7 @@ public interface GenreRepository {
 
     Set<Genre> findGenresByFilmId(Long id);
 
-    void addGenresToFilm(Long id, Set<Genre> genres);
+    void insertGenresForFilm(Long id, Set<Genre> genres);
 
     List<Genre> findAllGenres();
 }

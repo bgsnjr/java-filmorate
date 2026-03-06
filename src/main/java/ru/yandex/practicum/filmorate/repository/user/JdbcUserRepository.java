@@ -77,7 +77,7 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public Optional<User> findUserById(Long id) {
         String query = """
-                SELECT *
+                SELECT id, email, login, name, birthday
                 FROM users
                 WHERE id = ?
                 """;
@@ -90,7 +90,7 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public List<User> findAllUsers() {
         String query = """
-                SELECT *
+                SELECT id, email, login, name, birthday
                 FROM users
                 ORDER BY id
                 """;
@@ -145,7 +145,11 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public List<User> findFriends(Long userId) {
         String query = """
-                SELECT u.*
+                SELECT u.id,
+                       u.email,
+                       u.login,
+                       u.name,
+                       u.birthday
                 FROM friendships f
                 JOIN users u ON u.id = f.friend_id
                 WHERE f.user_id = ?
@@ -157,7 +161,11 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public List<User> findMutualFriends(Long userId, Long otherUserId) {
         String query = """
-                SELECT u.*
+                SELECT u.id,
+                       u.email,
+                       u.login,
+                       u.name,
+                       u.birthday
                 FROM friendships f1
                 JOIN friendships f2 ON f1.friend_id = f2.friend_id
                 JOIN users u ON u.id = f1.friend_id

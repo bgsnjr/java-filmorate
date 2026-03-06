@@ -19,7 +19,7 @@ public class JdbcGenreRepository implements GenreRepository {
     @Override
     public Optional<Genre> findGenreById(Integer id) {
         String query = """
-                SELECT *
+                SELECT id, name
                 FROM genres
                 WHERE id = ?
                 """;
@@ -32,7 +32,7 @@ public class JdbcGenreRepository implements GenreRepository {
     @Override
     public Set<Genre> findGenresByFilmId(Long id) {
         String query = """
-                SELECT g.*
+                SELECT g.id, g.name
                 FROM genres g
                 JOIN films_genres fg ON fg.genre_id = g.id
                 WHERE fg.film_id = ?
@@ -42,7 +42,7 @@ public class JdbcGenreRepository implements GenreRepository {
     }
 
     @Override
-    public void addGenresToFilm(Long filmId, Set<Genre> genres) {
+    public void insertGenresForFilm(Long filmId, Set<Genre> genres) {
         String query = """
                 INSERT INTO films_genres (film_id, genre_id)
                 VALUES (?, ?)
@@ -58,7 +58,7 @@ public class JdbcGenreRepository implements GenreRepository {
     @Override
     public List<Genre> findAllGenres() {
         String query = """
-                SELECT *
+                SELECT id, name
                 FROM genres
                 ORDER BY id
                 """;

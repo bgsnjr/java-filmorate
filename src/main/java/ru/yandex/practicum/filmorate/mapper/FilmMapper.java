@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,7 @@ public final class FilmMapper {
                 .releaseDate(dto.getReleaseDate())
                 .duration(dto.getDuration())
                 .mpa(dto.getMpa())
-                .genres(dto.getGenres())
+                .genres(dto.getGenres() != null ? dto.getGenres() : new HashSet<>())
                 .build();
     }
 
