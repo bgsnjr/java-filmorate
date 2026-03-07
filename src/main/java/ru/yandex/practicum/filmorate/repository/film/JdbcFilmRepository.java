@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.repository.genre.JdbcGenreRepository;
 import ru.yandex.practicum.filmorate.repository.mpa.JdbcMpaRepository;
@@ -80,10 +79,6 @@ public class JdbcFilmRepository implements FilmRepository {
 
             return ps;
         });
-
-        if (updated == 0) {
-            throw new NotFoundException("Film with id " + film.getId() + " not found");
-        }
 
         if (film.getGenres() != null) {
             jdbc.update("DELETE FROM films_genres WHERE film_id = ?", film.getId());

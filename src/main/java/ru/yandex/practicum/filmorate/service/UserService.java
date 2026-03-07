@@ -33,6 +33,8 @@ public class UserService {
     }
 
     public UserResponseDto updateUser(UserUpdateDto dto) {
+        getUserOrThrow(dto.getId());
+
         User user = userRepository.updateUser(UserMapper.toModel(dto));
 
         log.debug("Updated user with id {}", user.getId());

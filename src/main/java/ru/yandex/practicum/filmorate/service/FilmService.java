@@ -44,6 +44,7 @@ public class FilmService {
     }
 
     public FilmResponseDto updateFilm(FilmUpdateDto dto) {
+        getFilmOrThrow(dto.getId());
         validateRating(dto.getMpa().getId());
 
         Set<Genre> genres = dto.getGenres();

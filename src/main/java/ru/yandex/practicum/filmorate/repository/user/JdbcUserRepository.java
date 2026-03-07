@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -66,10 +65,6 @@ public class JdbcUserRepository implements UserRepository {
 
             return ps;
         });
-
-        if (updated == 0) {
-            throw new NotFoundException("User with id " + user.getId() + " not found");
-        }
 
         return user;
     }
